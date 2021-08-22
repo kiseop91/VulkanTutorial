@@ -1,0 +1,42 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "vs2017-AMDx64-Debug",
+            "displayName": "vs2017 AMD:x64  Debug",
+            "description": "Using compilers for Visual Studio 15 2017 (x64 architecture)",
+            "generator": "Visual Studio 15 2017",
+            "toolset": "host=x64",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_TOOLCHAIN_FILE": {
+                    "type": "FILEPATH",
+                    "value": "${sourceDir}/vendor/scripts/buildsystems/vcpkg.cmake"
+                },
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            }
+        },
+
+        {
+            "name": "vs2017-AMDx64-Release",
+            "displayName": "vs2017 AMD:x64 Release",
+            "description": "Using compilers for Visual Studio 15 2017 (x64 architecture)",
+            "generator": "Visual Studio 15 2017",
+            "toolset": "host=x64",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_TOOLCHAIN_FILE": {
+                    "type": "FILEPATH",
+                    "value": "${sourceDir}/vendor/scripts/buildsystems/vcpkg.cmake"
+                },
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            }
+        }
+    ]
+}
