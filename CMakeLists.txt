@@ -13,6 +13,12 @@ find_package(glm CONFIG REQUIRED)
 
 add_executable(vulkan-test "src/main.cpp")
 
+# message(STATUS "inc ${Vulkan_INCLUDE_DIRS}")
+# target_include_directories(vulkan-test PRIVATE
+#  ${Vulkan_INCLUDE_DIRS}
+#  ${GLFW3_INCLUDE_DIR}
+#  )
+
 target_link_libraries(vulkan-test PRIVATE
 Vulkan::Vulkan
 glfw

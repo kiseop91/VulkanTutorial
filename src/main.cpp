@@ -1,15 +1,6 @@
 #define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-/*
-GLFW/glfw3.h 헤더를 살펴보면,
-#define GLFW_INCLUDE_VULKAN
-이 전처리기가 명시되어있으면, 벌칸 헤더파일을 포함하도록 되어있다.
-#if defined(GLFW_INCLUDE_VULKAN)
-  #include <vulkan/vulkan.h>
-#endif /* Vulkan header 
-*/
 //#include <vulkan/vulkan.h>
+#include <GLFW/glfw3.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -18,16 +9,20 @@ GLFW/glfw3.h 헤더를 살펴보면,
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-class HelloTriangleApplication{
+class HelloTriangleApplication
+{
 public:
-void run() {
-    initWindow();
-    initVulkan();
-    mainLoop();
-    cleanup();
-}
+    void run()
+    {
+        initWindow();
+        initVulkan();
+        mainLoop();
+        cleanup();
+    }
+
 private:
-    void initWindow() {
+    void initWindow()
+    {
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -35,29 +30,50 @@ private:
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     }
-    void initVulkan() {}
-    void mainLoop(){
-        while(!glfwWindowShouldClose(window)){
+    void initVulkan()
+    {
+        createInstance();
+    }
+    void mainLoop()
+    {
+        while (!glfwWindowShouldClose(window))
+        {
             glfwPollEvents();
         }
     }
-    void cleanup(){
+    void cleanup()
+    {
         glfwDestroyWindow(window);
         glfwTerminate();
     }
 
+    void createInstance()
+    {
+        VkApplicationInfo appInfo{};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = "Hello Triangle";
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.pEngineName = "No Engine";
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_0;
+    }
+
 private:
-    GLFWwindow* window;
+    VkInstance instance;
+    GLFWwindow *window;
 };
 
-int main() { 
+int main()
+{
     HelloTriangleApplication app;
     std::cout << " Hello Test ! \n";
-    try{
+    try
+    {
         app.run();
     }
-    catch(const std::exception& e){
-        std::cerr<< e.what() << std::endl;
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
