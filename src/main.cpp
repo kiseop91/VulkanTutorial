@@ -86,6 +86,8 @@ private:
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
+        createSwapChain();
+        createImageViews();
     }
     void mainLoop()
     {
@@ -96,14 +98,18 @@ private:
     }
     void cleanup()
     {
+        vkDestroySwapchainKHR(device, swapChain, nullptr);
         vkDestroyDevice(device, nullptr);
+        
         if (enableValidationLayers) {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
-        vkDestroySurfaceKHR(instance, surface, nullptr);
-        vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+        vkDestroySurfaceKHR(instance, surface, nullptr);        
         vkDestroyInstance(instance, nullptr);
+        
         glfwDestroyWindow(window);
+
         glfwTerminate();
     }
 
@@ -344,7 +350,9 @@ private:
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.surface = surface;
+
         createInfo.minImageCount = imageCount;
+        createInfo.imageFormat = surfaceFormat.format;
         createInfo.imageColorSpace = surfaceFormat.colorSpace;
         createInfo.imageExtent = extent;
         createInfo.imageArrayLayers = 1;
@@ -358,7 +366,7 @@ private:
             createInfo.queueFamilyIndexCount = 2;
             createInfo.pQueueFamilyIndices = QueueFamilyIndices;
         }else {
-            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
             createInfo.queueFamilyIndexCount = 0; // option
             createInfo.pQueueFamilyIndices = nullptr; // option
         }
