@@ -88,6 +88,7 @@ private:
         createLogicalDevice();
         createSwapChain();
         createImageViews();
+        createGraphicsPipeline();
     }
     void mainLoop()
     {
@@ -217,6 +218,9 @@ private:
         vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
     }
 
+    void createGraphicsPipeline() {
+        
+    }
 
     bool isDeviceSuitable(VkPhysicalDevice device) {
         // 필요에따라 적절한 GPU선택을 위해 여러 옵션을 커스텀할 수있다. 
