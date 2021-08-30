@@ -10,6 +10,7 @@
 #include <optional>
 #include <cstdint>
 #include <algorithm>
+#include <fstream>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -219,7 +220,69 @@ private:
     }
 
     void createGraphicsPipeline() {
-        
+        // 실행위치로 읽고있어서, 절대경로로 변환이 필요해보임.
+        // 이 프로젝트의 경우 실행파일은 build/{platform}/{Config}/ 에 위치함.
+        // To Do : 나중에 실행파일 경로 기준으로 생성하도록 수정할것
+        auto vertShaderCode = readFile("../../../shaders/vert.spv");
+        auto fragShaderCode = readFile("../../../shaders/frag.spv");
+
+        VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+        // Shader 스테이지 생성
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO; 
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT; // Vulkan에서 Shader가 사용될 파이프라인 단계
+        vertShaderStageInfo.module = vertShaderModule;
+        vertShaderStageInfo.pName = "main"; // 진입점 ( 프로그램별로 따로 지정이 가능함. )
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = fragShaderModule;
+        fragShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+
+        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+    }
+
+    static std::vector<char> readFile(const std::string& filename) {
+
+        // ate : 파일 끝에서 읽기 시작
+        // binary : 파일을 바이너리 파일로 읽기 (Text변형을 방지함)
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+        if(!file.is_open())
+            throw std::runtime_error("failed to open file!");
+
+
+        //tellg 현재 연관된 스트립버퍼 객체의 입력 위치 지정자를 리턴함.
+        size_t fileSize = (size_t)file.tellg();
+        std::vector<char> buffer(fileSize);
+
+        // seekg는 입력위치를 지정한다.
+        // seekp는 출력위치를 지정한다.
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+
+        file.close();
+
+        return buffer;
+    }
+
+    VkShaderModule createShaderModule(const std::vector<char>& code){
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = code.size();
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+        VkShaderModule shaderModule;
+        if(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule)!= VK_SUCCESS )
+            throw std::runtime_error("failed to create shader module!!");
+
+        return shaderModule;
     }
 
     bool isDeviceSuitable(VkPhysicalDevice device) {
