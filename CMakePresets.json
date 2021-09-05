@@ -39,26 +39,26 @@
     ],
     "buildPresets": [
         {
-            "name": "Debug",
-            "displayName": "Debug",
+            "name": "Win_Debug",
+            "displayName": "Win_Debug",
             "configurePreset": "vs2017-AMDx64",
             "configuration": "Debug"
         },
         {
-            "name": "Release",
-            "displayName": "Release",
+            "name": "Win_Release",
+            "displayName": "Win_Release",
             "configurePreset": "vs2017-AMDx64",
             "configuration": "Release"
         },
         {
-            "name": "Debug",
-            "displayName": "Debug",
+            "name": "M1_Debug",
+            "displayName": "M1_Debug",
             "configurePreset": "M1-Mac-arm64",
             "configuration": "Debug"
         },
         {
-            "name": "Release",
-            "displayName": "Release",
+            "name": "M1_Release",
+            "displayName": "M1_Release",
             "configurePreset": "M1-Mac-arm64",
             "configuration": "Release"
         }
