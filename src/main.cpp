@@ -456,8 +456,8 @@ private:
         // 실행위치로 읽고있어서, 절대경로로 변환이 필요해보임.
         // 이 프로젝트의 경우 실행파일은 build/{platform}/{Config}/ 에 위치함.
         // To Do : 나중에 실행파일 경로 기준으로 생성하도록 수정할것
-        auto vertShaderCode = readFile("../shaders/vert.spv");
-        auto fragShaderCode = readFile("../shaders/frag.spv");
+        auto vertShaderCode = readFile("../../../shaders/vert.spv");
+        auto fragShaderCode = readFile("../../../shaders/frag.spv");
 
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);

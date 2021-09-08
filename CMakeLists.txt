@@ -23,7 +23,7 @@ message(STATUS "Vulkan_GLSLANG_VALIDATOR_EXECUTABLE  : ${Vulkan_GLSLANG_VALIDATO
 
 function(add_shader SHADER INPUT_EXTENSION)
     set(shaderFile  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER}${INPUT_EXTENSION})
-    set(outputFile ${CMAKE_BINARY_DIR}/${SHADER}.spv)
+    set(outputFile ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER}.spv)
     add_custom_command(
         TARGET ${TargetName} POST_BUILD
         COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${shaderFile} -o ${outputFile}
