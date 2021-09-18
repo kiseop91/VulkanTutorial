@@ -19,6 +19,7 @@ def WindowsPackageInstall():
     os.system(vcpkg + 'install glm:x64-windows')
     os.system(vcpkg + 'install glfw3:x64-windows')
     os.system(vcpkg + 'install stb:x64-windows')
+    os.system(vcpkg + 'install tinyobjloader:x64-windows')
 
     os.system(vcpkg +'integrate install')
 
@@ -41,11 +42,13 @@ def MacPackageInstall():
     os.system(vcpkg + 'install glm:x64-osx')
     os.system(vcpkg + 'install glfw3:x64-osx')
     os.system(vcpkg + 'install stb:x64-osx')
+    os.system(vcpkg + 'install tinyobjloader:x64-osx')
 
     os.system(vcpkg + 'install vulkan:arm64-osx')
     os.system(vcpkg + 'install glm:arm64-osx')
     os.system(vcpkg + 'install glfw3:arm64-osx')
     os.system(vcpkg + 'install stb:arm64-osx')
+    os.system(vcpkg + 'install tinyobjloader:arm64-osx')
 
     os.system(vcpkg +'integrate install')
 
