@@ -9,7 +9,18 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(tinyobjloader CONFIG REQUIRED)
 
-add_executable(${TargetName} "src/main.cpp")
+add_executable(${TargetName})
+
+target_include_directories(${TargetName} PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/imgui/")
+target_sources(${TargetName} PRIVATE "src/main.cpp" 
+"imgui/imgui_demo.cpp"
+"imgui/imgui_draw.cpp"
+"imgui/imgui_impl_glfw.cpp"
+"imgui/imgui_impl_vulkan.cpp"
+"imgui/imgui_tables.cpp"
+"imgui/imgui_widgets.cpp"
+"imgui/imgui.cpp"
+)
 
 target_compile_features(${TargetName} PRIVATE cxx_std_17)
 target_link_libraries(${TargetName} PRIVATE
