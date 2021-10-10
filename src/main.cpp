@@ -329,9 +329,18 @@ private:
                 ImGui::End();
             }
 
+            ImGui::Render();
+            
+
             drawFrame(f);
 
-            ImGui::UpdatePlatformWindows();
+            ImGuiIO& io = ImGui::GetIO(); (void)io;
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+            }
+
         }
 
         vkDeviceWaitIdle(device);
@@ -372,12 +381,12 @@ private:
 
     void cleanup()
     {
+        cleanupSwapChain();
+
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
         vkDestroyDescriptorPool(device, imGuidescriptorPool, nullptr);
-
-        cleanupSwapChain();
 
         vkDestroySampler(device, textureSampler, nullptr);
         vkDestroyImageView(device, textureImageView, nullptr);
@@ -1507,8 +1516,6 @@ private:
 
     void drawFrame(float rotate_obj)
     {
-        ImGui::Render();
-
         vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
@@ -1537,9 +1544,7 @@ private:
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
         if (vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to begin recording command buffer!");
-        }
 
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1547,36 +1552,28 @@ private:
         renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
         renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = swapChainExtent;
-
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {{0.5f, 0.3f, 0.0f, 1.0f}};
+        ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+        clearValues[0].color.float32[0] = clear_color.x * clear_color.w;
+        clearValues[0].color.float32[1] = clear_color.y * clear_color.w;
+        clearValues[0].color.float32[2] = clear_color.z * clear_color.w;
+        clearValues[0].color.float32[3] = clear_color.w;
         clearValues[1].depthStencil = {1.0f, 0};
-
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
-
         vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
         vkCmdBindPipeline(commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
         VkBuffer vertexBuffers[] = {vertexBuffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffers[imageIndex], 0, 1, vertexBuffers, offsets);
-
         vkCmdBindIndexBuffer(commandBuffers[imageIndex], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
         vkCmdBindDescriptorSets(commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[imageIndex], 0, nullptr);
-
         vkCmdDrawIndexed(commandBuffers[imageIndex], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffers[imageIndex]);
-
         vkCmdEndRenderPass(commandBuffers[imageIndex]);
 
         if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS)
-        {
             throw std::runtime_error("failed to record command buffer!");
-        }
 
         std::array<VkCommandBuffer, 1> submitCommandBuffers = {commandBuffers[imageIndex]};
         VkSubmitInfo submitInfo{};
@@ -1877,20 +1874,31 @@ private:
         // Setup Dear ImGui context
         if (init)
         {
+            // Setup Dear ImGui context
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
             ImGuiIO &io = ImGui::GetIO();
             (void)io;
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
-            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport / Platform Windows
-            ImGui::StyleColorsClassic();
+            //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+            //io.ConfigViewportsNoAutoMerge = true;
+            //io.ConfigViewportsNoTaskBarIcon = true;
+
+            // Setup Dear ImGui style
+            ImGui::StyleColorsDark();
+            //ImGui::StyleColorsClassic();
+
+            // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
             ImGuiStyle &style = ImGui::GetStyle();
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
                 style.WindowRounding = 0.0f;
                 style.Colors[ImGuiCol_WindowBg].w = 1.0f;
             }
+
+            // Setup Platform/Renderer backends
             ImGui_ImplGlfw_InitForVulkan(window, true);
         }
 
