@@ -290,9 +290,9 @@ private:
     {
         initImGUI(true, WIDTH, HEIGHT);
 
+        int factor = 1;
         while (!glfwWindowShouldClose(window))
         {
-
             glfwPollEvents();
 
             ///Imgui
@@ -300,21 +300,32 @@ private:
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             ImGui::ShowDemoWindow();
-            static float f = 0.0f;
+
+            static float f = 1.0f;
             {
-                ImGui::Begin("Hello, world!");             
-                ImGui::Text("Rotate Data Contorller");    
-                ImGui::SliderFloat("rotate", &f, 0.0f, 4.0f); 
-                ImGui::SliderFloat("x", &x, -100.0f, 100.0f); 
-                ImGui::SliderFloat("y", &y, -100.0f, 100.0f); 
+                f += 0.00001f;
 
-                ImGui::Text("Eye Data Contorller");    
-                ImGui::SliderFloat("eye_x", &eye_x, -10.0f, 10.0f); 
-                ImGui::SliderFloat("eye_y", &eye_y, -10.0f, 10.0f); 
-                ImGui::SliderFloat("eye_z", &eye_z, -10.0f, 10.0f); 
+                if (fov >= 100.f)
+                    factor = -1;
 
-                ImGui::Text("Fov Data Contorller");    
-                ImGui::SliderFloat("fov", &fov, -100.0f, 100.0f); 
+                if (fov <= 45.f)
+                    factor = 1;
+
+                fov += factor * 0.01f;
+
+                ImGui::Begin("Hello, world!");
+                ImGui::Text("Rotate Data Contorller");
+                ImGui::SliderFloat("rotate", &f, 0.0f, 5.0f);
+                ImGui::SliderFloat("x", &x, -100.0f, 100.0f);
+                ImGui::SliderFloat("y", &y, -100.0f, 100.0f);
+
+                ImGui::Text("Eye Data Contorller");
+                ImGui::SliderFloat("eye_x", &eye_x, -10.0f, 10.0f);
+                ImGui::SliderFloat("eye_y", &eye_y, -10.0f, 10.0f);
+                ImGui::SliderFloat("eye_z", &eye_z, -10.0f, 10.0f);
+
+                ImGui::Text("Fov Data Contorller");
+                ImGui::SliderFloat("fov", &fov, 45.f, 100.0f);
 
                 ImGui::End();
             }
@@ -323,7 +334,8 @@ private:
             ImGui::Render();
 
             drawFrame(f);
-            
+
+            ImGui::UpdatePlatformWindows();
         }
 
         vkDeviceWaitIdle(device);
@@ -1467,7 +1479,7 @@ private:
             renderPassInfo.renderArea.extent = swapChainExtent;
 
             std::array<VkClearValue, 2> clearValues{};
-            clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+            clearValues[0].color = {{0.5f, 0.3f, 0.0f, 1.0f}};
             clearValues[1].depthStencil = {1.0f, 0};
 
             renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -1536,9 +1548,10 @@ private:
         static auto startTime = std::chrono::high_resolution_clock::now();
 
         auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), rotate_factor * glm::radians(90.0f), glm::vec3(x, y, 1.0f));
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * rotate_factor * glm::radians(90.0f), glm::vec3(x, y, 1.0f));
         ubo.view = glm::lookAt(glm::vec3(eye_x, eye_y, eye_z), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1;
@@ -1578,6 +1591,11 @@ private:
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         int width = 0, height = 0;
         glfwGetFramebufferSize(window, &width, &height);
+        while (width == 0 || height == 0)
+        {
+            glfwGetFramebufferSize(window, &width, &height);
+            glfwWaitEvents();
+        }
 
         std::array<VkClearValue, 2> clearValues{};
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -1765,7 +1783,13 @@ private:
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+        VkPhysicalDeviceProperties properties;
+        vkGetPhysicalDeviceProperties(device, &properties);
+        bool discrete_gpu = false;
+        if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+            discrete_gpu = true;
+
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy && discrete_gpu;
     }
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device)
@@ -1901,11 +1925,36 @@ private:
         // Setup Dear ImGui context
         if (init)
         {
+            // Setup Dear ImGui context
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
             ImGuiIO &io = ImGui::GetIO();
             (void)io;
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+            //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+            //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
+            //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
+
+            // Setup Dear ImGui style
+            //ImGui::StyleColorsDark();
             ImGui::StyleColorsClassic();
+
+            // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+            ImGuiStyle &style = ImGui::GetStyle();
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                style.WindowRounding = 0.0f;
+                style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+            }
+
+            //QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+            // init_info.QueueFamily = indices.graphicsFamily.has_value();
+            // init_info.Queue = graphicsQueue;
+            ////////
+
             ImGui_ImplGlfw_InitForVulkan(window, true);
         }
 
@@ -1915,8 +1964,25 @@ private:
         init_info.Device = device;
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
-        init_info.QueueFamily = indices.graphicsFamily.has_value();
-        init_info.Queue = graphicsQueue;
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
+        int presentQueueFamliy = 0;
+        VkBool32 presentSupport = false;
+        for (const auto &queueFamily : queueFamilies)
+        {
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, presentQueueFamliy, surface, &presentSupport);
+            if (presentSupport)
+            {
+                break;
+            }
+            presentQueueFamliy++;
+        }
+        vkGetDeviceQueue(device, presentQueueFamliy, 0, &presentQueue);
+
+        init_info.QueueFamily = presentQueueFamliy;
+        init_info.Queue = presentQueue;
         init_info.PipelineCache = VK_NULL_HANDLE;
 
         // Create Descriptor Pool
